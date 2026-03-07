@@ -2,86 +2,29 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-    <title>Auftrags-Manager Pro</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interaktive Karte</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    <style>
-        body { margin: 0; display: flex; height: 100vh; font-family: sans-serif; }
-        #sidebar { width: 350px; background: #2c3e50; color: white; padding: 20px; }
-        #map { flex-grow: 1; height: 100%; }
-        input, textarea, button { width: 100%; padding: 10px; margin-bottom: 10px; border-radius: 5px; border: none; }
-        button { background: #27ae60; color: white; cursor: pointer; font-weight: bold; }
-        .edit-btn { background: #3498db; margin-bottom: 5px; }
-        .del-btn { background: #e74c3c; }
-    </style>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
-<div id="sidebar">
-    <h3>Auftrag erfassen</h3>
-    <input type="text" id="kunde" placeholder="Firma">
-    <input type="text" id="ort" placeholder="Ort (z.B. Greiz)">
-    <input type="date" id="datum">
-    <textarea id="info" rows="3" placeholder="Notizen"></textarea>
-    <input type="color" id="farbe" value="#e67e22">
-    <button onclick="addAuftrag()">Speichern</button>
-</div>
-<div id="map"></div>
 
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<script>
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyerCcAbPNlBnOGPfdpscVBNbu92UPp_d-HsAfUwSqKz2_MJidtaVGlL1TMMrnEEtX65Q/exec"; // <--- HIER DEINE URL EINTRAGEN
-    const map = L.map('map').setView([50.627, 12.096], 13);
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+    <div id="app-container">
+        <div id="sidebar">
+            <h2>📍 Map Control</h2>
+            <input type="text" id="name" placeholder="Name">
+            <input type="text" id="firma" placeholder="Firma">
+            <input type="text" id="strasse" placeholder="Straße">
+            <input type="text" id="ort" placeholder="Ort">
+            <input type="date" id="datum">
+            <textarea id="notiz" placeholder="Notiz..."></textarea>
+            <input type="color" id="farbe" value="#ff0000">
+            <button id="save-btn" onclick="saveLocation()">Speichern</button>
+        </div>
+        <div id="map"></div>
+    </div>
 
-    async function addAuftrag() {
-        const ortVal = document.getElementById('ort').value;
-        const geoResp = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${ortVal}`);
-        const geoData = await geoResp.json();
-        
-        if (geoData.length === 0) return alert("Ort nicht gefunden!");
-        const { lat, lon } = geoData[0];
-
-        const daten = {
-            kunde: document.getElementById('kunde').value,
-            ort: ortVal,
-            lat: lat, lon: lon,
-            datum: document.getElementById('datum').value,
-            info: document.getElementById('info').value,
-            farbe: document.getElementById('farbe').value
-        };
-
-        await fetch(SCRIPT_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify(daten) });
-        
-        addMarkerToMap(daten);
-        alert("Auftrag in der Cloud gespeichert!");
-
-        // Konsole leeren
-        document.getElementById('kunde').value = '';
-        document.getElementById('ort').value = '';
-        document.getElementById('datum').value = '';
-        document.getElementById('info').value = '';
-    }
-
-    function addMarkerToMap(d) {
-        L.circleMarker([d.lat, d.lon], { color: d.farbe, radius: 8 })
-         .addTo(map)
-         .bindPopup(`<b>${d.kunde}</b><br>${d.ort}<br>
-            <button class="edit-btn" onclick="alert('Bearbeitung öffnet...')">Bearbeiten</button>
-            <button class="del-btn" onclick="loescheAuftrag('${d.kunde}')">Löschen</button>`);
-    }
-
-    async function loescheAuftrag(kunde) {
-        if (!confirm("Wirklich löschen?")) return;
-        await fetch(SCRIPT_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify({ action: 'delete', kunde: kunde }) });
-        location.reload(); 
-    }
-
-    async function ladeDaten() {
-        const response = await fetch(SCRIPT_URL);
-        const daten = await response.json();
-        daten.forEach(addMarkerToMap);
-    }
-
-    window.onload = ladeDaten;
-</script>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="script.js"></script>
 </body>
 </html>
