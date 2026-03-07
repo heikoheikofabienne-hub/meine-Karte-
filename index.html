@@ -2,85 +2,83 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Auftrags-Manager Pro</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <style>
-        body { margin: 0; font-family: sans-serif; display: flex; height: 100vh; background: #f4f4f4; }
-        #sidebar { width: 350px; background: #2c3e50; color: white; padding: 20px; overflow-y: auto; z-index: 1000; }
+        body { margin: 0; display: flex; height: 100vh; font-family: sans-serif; }
+        #sidebar { width: 350px; background: #2c3e50; color: white; padding: 20px; }
         #map { flex-grow: 1; height: 100%; }
         input, textarea, button { width: 100%; padding: 10px; margin-bottom: 10px; border-radius: 5px; border: none; }
         button { background: #27ae60; color: white; cursor: pointer; font-weight: bold; }
+        .edit-btn { background: #3498db; margin-bottom: 5px; }
+        .del-btn { background: #e74c3c; }
     </style>
 </head>
 <body>
-
 <div id="sidebar">
-    <h3>Auftrags-Details</h3>
+    <h3>Auftrag erfassen</h3>
     <input type="text" id="kunde" placeholder="Firma">
-    <input type="text" id="ort" placeholder="Ort">
+    <input type="text" id="ort" placeholder="Ort (z.B. Greiz)">
     <input type="date" id="datum">
-    <textarea id="info" rows="4" placeholder="Notizen"></textarea>
+    <textarea id="info" rows="3" placeholder="Notizen"></textarea>
     <input type="color" id="farbe" value="#e67e22">
     <button onclick="addAuftrag()">Speichern</button>
 </div>
-
 <div id="map"></div>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwGRXOG6JPGt5YWQ68HQ1zBKntSn6ohLDwUKPZPAnmE0P71v_uIzGEagT4x7po0LFgEfA/exec";
-    
+    const SCRIPT_URL = "HIER_DEINE_APPS_SCRIPT_URL_EINFÜGEN"; // <--- HIER DEINE URL EINTRAGEN
     const map = L.map('map').setView([50.627, 12.096], 13);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
 
-    let tempMarker;
-    map.on('click', (e) => {
-        if (tempMarker) map.removeLayer(tempMarker);
-        tempMarker = L.marker(e.latlng).addTo(map);
-        tempMarker.lat = e.latlng.lat;
-        tempMarker.lng = e.latlng.lng;
-    });
-
     async function addAuftrag() {
-        if (!tempMarker) return alert("Bitte erst einen Ort auf der Karte anklicken!");
+        const ortVal = document.getElementById('ort').value;
+        const geoResp = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${ortVal}`);
+        const geoData = await geoResp.json();
         
+        if (geoData.length === 0) return alert("Ort nicht gefunden!");
+        const { lat, lon } = geoData[0];
+
         const daten = {
             kunde: document.getElementById('kunde').value,
-            ort: document.getElementById('ort').value,
+            ort: ortVal,
+            lat: lat, lon: lon,
             datum: document.getElementById('datum').value,
             info: document.getElementById('info').value,
-            farbe: document.getElementById('farbe').value,
-            lat: tempMarker.lat,
-            lon: tempMarker.lng
+            farbe: document.getElementById('farbe').value
         };
 
-        await fetch(SCRIPT_URL, {
-            method: 'POST',
-            mode: 'no-cors',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(daten)
-        });
-
+        await fetch(SCRIPT_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify(daten) });
+        
+        addMarkerToMap(daten);
         alert("Auftrag in der Cloud gespeichert!");
-        location.reload();
+
+        // Konsole leeren
+        document.getElementById('kunde').value = '';
+        document.getElementById('ort').value = '';
+        document.getElementById('datum').value = '';
+        document.getElementById('info').value = '';
+    }
+
+    function addMarkerToMap(d) {
+        L.circleMarker([d.lat, d.lon], { color: d.farbe, radius: 8 })
+         .addTo(map)
+         .bindPopup(`<b>${d.kunde}</b><br>${d.ort}<br>
+            <button class="edit-btn" onclick="alert('Bearbeitung öffnet...')">Bearbeiten</button>
+            <button class="del-btn" onclick="loescheAuftrag('${d.kunde}')">Löschen</button>`);
+    }
+
+    async function loescheAuftrag(kunde) {
+        if (!confirm("Wirklich löschen?")) return;
+        await fetch(SCRIPT_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify({ action: 'delete', kunde: kunde }) });
+        location.reload(); 
     }
 
     async function ladeDaten() {
         const response = await fetch(SCRIPT_URL);
         const daten = await response.json();
-        
-        daten.forEach(d => {
-            // Umwandlung sicherstellen (Punkt statt Komma)
-            const lat = parseFloat(String(d.lat).replace(',', '.'));
-            const lon = parseFloat(String(d.lon).replace(',', '.'));
-            
-            if (!isNaN(lat) && !isNaN(lon)) {
-                L.circleMarker([lat, lon], { color: d.farbe, radius: 8 })
-                 .addTo(map)
-                 .bindPopup(`<b>${d.kunde}</b><br>${d.ort}<br>${d.info}`);
-            }
-        });
+        daten.forEach(addMarkerToMap);
     }
 
     window.onload = ladeDaten;
