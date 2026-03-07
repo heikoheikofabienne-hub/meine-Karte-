@@ -31,7 +31,6 @@
 <script>
     const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwGRXOG6JPGt5YWQ68HQ1zBKntSn6ohLDwUKPZPAnmE0P71v_uIzGEagT4x7po0LFgEfA/exec";
     
-    // Karte initialisieren
     const map = L.map('map').setView([50.627, 12.096], 13);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
 
@@ -43,7 +42,6 @@
         tempMarker.lng = e.latlng.lng;
     });
 
-    // Auftrag speichern
     async function addAuftrag() {
         if (!tempMarker) return alert("Bitte erst einen Ort auf der Karte anklicken!");
         
@@ -68,15 +66,20 @@
         location.reload();
     }
 
-    // Daten laden
     async function ladeDaten() {
         const response = await fetch(SCRIPT_URL);
         const daten = await response.json();
         
         daten.forEach(d => {
-            L.circleMarker([d.lat, d.lon], { color: d.farbe, radius: 8 })
-             .addTo(map)
-             .bindPopup(`<b>${d.kunde}</b><br>${d.ort}<br>${d.info}`);
+            // Umwandlung sicherstellen (Punkt statt Komma)
+            const lat = parseFloat(String(d.lat).replace(',', '.'));
+            const lon = parseFloat(String(d.lon).replace(',', '.'));
+            
+            if (!isNaN(lat) && !isNaN(lon)) {
+                L.circleMarker([lat, lon], { color: d.farbe, radius: 8 })
+                 .addTo(map)
+                 .bindPopup(`<b>${d.kunde}</b><br>${d.ort}<br>${d.info}`);
+            }
         });
     }
 
@@ -84,4 +87,3 @@
 </script>
 </body>
 </html>
-   
