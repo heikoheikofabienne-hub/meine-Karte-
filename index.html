@@ -2,29 +2,41 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Interaktive Karte</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-    <div id="app-container">
-        <div id="sidebar">
-            <h2>📍 Map Control</h2>
+<div id="app-container">
+    <div id="sidebar">
+        <h2>📍 Map Control</h2>
+        <div class="input-group">
             <input type="text" id="name" placeholder="Name">
             <input type="text" id="firma" placeholder="Firma">
             <input type="text" id="strasse" placeholder="Straße">
-            <input type="text" id="ort" placeholder="Ort">
+            <input type="text" id="ort" placeholder="Ort (Stadt)">
             <input type="date" id="datum">
             <textarea id="notiz" placeholder="Notiz..."></textarea>
+            
+            <label>Punktfarbe wählen:</label>
             <input type="color" id="farbe" value="#ff0000">
-            <button id="save-btn" onclick="saveLocation()">Speichern</button>
+            
+            <button id="save-btn" onclick="saveLocation()">Punkt setzen & Speichern</button>
+            <button id="update-btn" style="display:none;" onclick="updateLocation()">Änderungen speichern</button>
+            <button id="cancel-btn" style="display:none;" onclick="resetForm()">Abbrechen</button>
+            
+            <hr style="width:100%; margin: 20px 0;">
+            <button onclick="exportData()" style="background: #3498db;">Daten sichern (Export)</button>
+            <label class="btn-import">
+                Daten wiederherstellen (Import)
+                <input type="file" id="importFile" style="display:none" onchange="importData(event)">
+            </label>
         </div>
-        <div id="map"></div>
     </div>
+    <div id="map"></div>
+</div>
 
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <script src="script.js"></script>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="script.js"></script>
 </body>
 </html>
