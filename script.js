@@ -57,10 +57,18 @@ function loadFromStorage() {
 }
 
 function deletePoint(id) {
+    // 1. Daten aus localStorage holen
     let stored = JSON.parse(localStorage.getItem('mapPoints') || '[]');
-    stored = stored.filter(p => p.id !== id);
-    localStorage.setItem('mapPoints', JSON.stringify(stored));
-    location.reload();
+    
+    // 2. Den Punkt aus dem Array herausfiltern
+    const updatedStored = stored.filter(p => p.id !== id);
+    
+    // 3. Sofort zurück in den localStorage schreiben
+    localStorage.setItem('mapPoints', JSON.stringify(updatedStored));
+    
+    // 4. Jetzt erst die Seite neu laden
+    location.reload(); 
+}
 }
 
 function editMode(id) {
