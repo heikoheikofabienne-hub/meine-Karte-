@@ -82,8 +82,43 @@ function editMode(id) {
 }
 
 async function updateLocation() {
-    deletePoint(currentEditingId);
-    await saveLocation();
+    // 1. Hole alle Daten aus dem Speicher
+    let stored = JSON.parse(localStorage.getItem('mapPoints') || '[]');
+    
+    // 2. Entferne den alten Punkt mit der aktuellen ID
+    stored = stored.filter(p => p.id !== currentEditingId);
+    
+    // 3. Hole die neuen Daten aus dem Formular
+    const updatedData = getFormData();
+    updatedData.id = currentEditingId; // Wichtig: Die ID muss gleich bleiben
+    
+    // 4. Geocode-Abfrage für die neuen Daten
+    const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(updatedData.strasse + " " + updatedData.ort)}`;
+    try {
+        const response = await fetch(url);
+        const results = await response.json();
+        
+        if (results.length > 0) {
+            updatedData.lat = results[0].lat;
+            updatedData.lon = results[0].lon;
+            
+            // 5. Neuen Datensatz hinzufügen
+            stored.push(updatedData);
+            
+            // 6. Erst jetzt alles zusammen in den Speicher schreiben
+            localStorage.setItem('mapPoints', JSON.stringify(stored));
+            
+            // 7. Alles zurücksetzen und Seite neu laden
+            alert("Änderung gespeichert!");
+            location.reload(); 
+        } else {
+            alert("Ort für das Update nicht gefunden!");
+        }
+    } catch (e) {
+        console.error(e);
+        alert("Fehler beim Speichern.");
+    }
+}
 }
 
 // Backup Funktionen
