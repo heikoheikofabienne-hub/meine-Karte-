@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="row g-4">
+  <div class="col-lg-8">
+    <div class="card shadow-sm mb-4"><div class="card-header bg-white d-flex justify-content-between align-items-center"><h1 class="h4 mb-0">{{ opportunity.title }}</h1><span class="traffic traffic-{{ opportunity.traffic_light|lower }}">{{ opportunity.traffic_light }} · {{ opportunity.score }}</span></div><div class="card-body">
+      <dl class="row">
+        <dt class="col-sm-3">Quelle</dt><dd class="col-sm-9">{{ opportunity.source }} {% if opportunity.link %}<a href="{{ opportunity.link }}" target="_blank" rel="noopener" class="ms-2">Quelle öffnen</a>{% endif %}</dd>
+        <dt class="col-sm-3">Auftraggeber</dt><dd class="col-sm-9">{{ opportunity.client or '—' }}</dd>
+        <dt class="col-sm-3">Ort</dt><dd class="col-sm-9">{{ opportunity.location or '—' }} · {{ opportunity.state or '—' }} · {{ opportunity.distance_km or '—' }} km zu Greiz</dd>
+        <dt class="col-sm-3">Deadline</dt><dd class="col-sm-9">{{ opportunity.deadline or 'Keine Angabe' }}</dd>
+        <dt class="col-sm-3">Kategorie</dt><dd class="col-sm-9">{{ opportunity.category }}</dd>
+        <dt class="col-sm-3">Empfohlene Aktion</dt><dd class="col-sm-9">{{ opportunity.next_action }}</dd>
+      </dl>
+      <h2 class="h5">Beschreibung</h2><p class="white-space">{{ opportunity.description or 'Keine Beschreibung vorhanden.' }}</p>
+    </div></div>
+
+    <div class="card shadow-sm"><div class="card-header bg-white"><h2 class="h5 mb-0">Bewertung, Status und Notizen bearbeiten</h2></div><div class="card-body">
+      <form method="post" class="row g-3">
+        {% include "partials/opportunity_fields.html" %}
+        <div class="col-12"><button class="btn btn-primary">Änderungen speichern und neu bewerten</button></div>
+      </form>
+    </div></div>
+  </div>
+  <div class="col-lg-4">
+    <div class="card shadow-sm mb-4"><div class="card-header bg-white fw-bold">Kontakt vorbereiten</div><div class="card-body">
+      <p class="text-muted small">Dieser Text wird lokal aus dem Treffer erstellt und kann in eine E-Mail kopiert werden.</p>
+      <textarea class="form-control" rows="14">{{ contact_text }}</textarea>
+    </div></div>
+    <div class="card border-danger"><div class="card-body"><form method="post" action="{{ url_for('opportunity_delete', opportunity_id=opportunity.id) }}" onsubmit="return confirm('Treffer wirklich löschen?')"><button class="btn btn-outline-danger w-100">Treffer löschen</button></form></div></div>
+  </div>
+</div>
+{% endblock %}
