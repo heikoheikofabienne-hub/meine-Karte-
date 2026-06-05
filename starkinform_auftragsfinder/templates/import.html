@@ -1,0 +1,8 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="row justify-content-center"><div class="col-lg-7"><div class="card shadow-sm"><div class="card-header bg-white"><h1 class="h4 mb-0">CSV-Import</h1></div><div class="card-body">
+  <p>Importiere manuell recherchierte Treffer mit den Spalten: <strong>Titel, Quelle, Link, Auftraggeber, Ort, Beschreibung, Kategorie, Deadline</strong>.</p>
+  <form method="post" enctype="multipart/form-data" class="vstack gap-3"><input class="form-control" type="file" name="csv_file" accept=".csv" required><button class="btn btn-primary">CSV importieren</button></form>
+  <hr><a href="{{ url_for('sample_csv') }}">Demo-/Beispiel-CSV herunterladen</a>
+</div></div></div></div>
+{% endblock %}

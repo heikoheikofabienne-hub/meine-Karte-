@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="row g-4"><div class="col-lg-5"><div class="card shadow-sm"><div class="card-header bg-white"><h1 class="h4 mb-0">E-Mail-Benachrichtigung vorbereiten</h1></div><div class="card-body">
+  <div class="alert alert-warning">Der automatische SMTP-Versand ist im MVP bewusst deaktiviert. Diese Seite speichert nur Konfiguration und zeigt eine Demo-Vorschau.</div>
+  <form method="post" class="vstack gap-3">
+    <div class="form-check form-switch"><input class="form-check-input" type="checkbox" name="smtp_enabled" value="true" {% if settings.smtp_enabled == 'true' %}checked{% endif %}><label class="form-check-label">SMTP später aktivieren</label></div>
+    <input class="form-control" name="smtp_host" value="{{ settings.smtp_host }}" placeholder="SMTP-Host">
+    <input class="form-control" name="smtp_port" value="{{ settings.smtp_port }}" placeholder="Port">
+    <input class="form-control" name="smtp_user" value="{{ settings.smtp_user }}" placeholder="Benutzer">
+    <input class="form-control" name="smtp_password" value="{{ settings.smtp_password }}" placeholder="Passwort / App-Passwort" type="password">
+    <input class="form-control" name="notification_recipient" value="{{ settings.notification_recipient }}" placeholder="Empfängeradresse">
+    <button class="btn btn-primary">Konfiguration speichern</button>
+  </form>
+</div></div></div>
+<div class="col-lg-7"><div class="card shadow-sm"><div class="card-header bg-white fw-bold">Demo: Diese grünen Treffer würden gemeldet</div><div class="card-body"><pre class="notification-preview">{{ demo_digest }}</pre></div></div></div></div>
+{% endblock %}
