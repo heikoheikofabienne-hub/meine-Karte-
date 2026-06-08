@@ -2,19 +2,38 @@
 {% block content %}
 <div class="row g-4">
   <div class="col-lg-8">
-    <div class="card shadow-sm mb-4"><div class="card-header bg-white d-flex justify-content-between align-items-center"><h1 class="h4 mb-0">{{ opportunity.title }}</h1><span class="traffic traffic-{{ opportunity.traffic_light|lower }}">{{ opportunity.traffic_light }} · {{ opportunity.score }}</span></div><div class="card-body">
-      <dl class="row">
-        <dt class="col-sm-3">Quelle</dt><dd class="col-sm-9">{{ opportunity.source }} {% if opportunity.link %}<a href="{{ opportunity.link }}" target="_blank" rel="noopener" class="ms-2">Quelle öffnen</a>{% endif %}</dd>
-        <dt class="col-sm-3">Auftraggeber</dt><dd class="col-sm-9">{{ opportunity.client or '—' }}</dd>
-        <dt class="col-sm-3">Ort</dt><dd class="col-sm-9">{{ opportunity.location or '—' }} · {{ opportunity.state or '—' }} · {{ opportunity.distance_km or '—' }} km zu Greiz</dd>
-        <dt class="col-sm-3">Deadline</dt><dd class="col-sm-9">{{ opportunity.deadline or 'Keine Angabe' }}</dd>
-        <dt class="col-sm-3">Kategorie</dt><dd class="col-sm-9">{{ opportunity.category }}</dd>
-        <dt class="col-sm-3">Empfohlene Aktion</dt><dd class="col-sm-9">{{ opportunity.next_action }}</dd>
-      </dl>
-      <h2 class="h5">Beschreibung</h2><p class="white-space">{{ opportunity.description or 'Keine Beschreibung vorhanden.' }}</p>
-    </div></div>
+    <div class="card shadow-sm mb-4">
+      <div class="card-header bg-white d-flex justify-content-between align-items-center gap-3"><h1 class="h4 mb-0">{{ opportunity.title }}</h1><span class="traffic traffic-{{ opportunity.traffic_light|lower }}">{{ opportunity.traffic_light }} · {{ opportunity.total_score }}</span></div>
+      <div class="card-body">
+        <dl class="row">
+          <dt class="col-sm-3">Quelle</dt><dd class="col-sm-9">{{ opportunity.source_name }} {% if opportunity.result_url %}<a href="{{ opportunity.result_url }}" target="_blank" rel="noopener" class="ms-2">Quelle öffnen</a>{% endif %}</dd>
+          <dt class="col-sm-3">Organisation</dt><dd class="col-sm-9">{{ opportunity.organization_name or '—' }}</dd>
+          <dt class="col-sm-3">Ort</dt><dd class="col-sm-9">{{ opportunity.location_name or '—' }} · {{ opportunity.state or '—' }} · {{ opportunity.distance_from_greiz_km or '—' }} km zu Greiz</dd>
+          <dt class="col-sm-3">Kategorie</dt><dd class="col-sm-9">{{ opportunity.category }}</dd>
+          <dt class="col-sm-3">Budget / Dringlichkeit</dt><dd class="col-sm-9">{{ opportunity.estimated_budget or '—' }} · {{ opportunity.urgency or 'normal' }}</dd>
+          <dt class="col-sm-3">Nächster Schritt</dt><dd class="col-sm-9"><strong>{{ opportunity.next_action }}</strong></dd>
+        </dl>
+        <h2 class="h5">KI-Zusammenfassung</h2><p class="white-space">{{ opportunity.ai_summary }}</p>
+        <h2 class="h5">Warum interessant?</h2><p>{{ opportunity.opportunity_reason }}</p>
+        <h2 class="h5">Passende Starkinform-Leistung</h2><p>{{ opportunity.recommended_service }}</p>
+        <h2 class="h5">Beschreibung</h2><p class="white-space">{{ opportunity.description or 'Keine Beschreibung vorhanden.' }}</p>
+      </div>
+    </div>
 
-    <div class="card shadow-sm"><div class="card-header bg-white"><h2 class="h5 mb-0">Bewertung, Status und Notizen bearbeiten</h2></div><div class="card-body">
+    <div class="card shadow-sm mb-4">
+      <div class="card-header bg-white"><h2 class="h5 mb-0">Score-Aufschlüsselung</h2></div>
+      <div class="card-body score-grid">
+        <div><small>Relevanz</small><strong>{{ opportunity.relevance_score }}/25</strong></div>
+        <div><small>Nähe</small><strong>{{ opportunity.distance_score }}/15</strong></div>
+        <div><small>Abschlusswahrscheinlichkeit</small><strong>{{ opportunity.probability_score }}/20</strong></div>
+        <div><small>Budget</small><strong>{{ opportunity.budget_score }}/15</strong></div>
+        <div><small>Dringlichkeit</small><strong>{{ opportunity.urgency_score }}/10</strong></div>
+        <div><small>Prestige</small><strong>{{ opportunity.prestige_score }}/10</strong></div>
+        <div><small>Kontaktierbarkeit</small><strong>{{ opportunity.contactability_score }}/5</strong></div>
+      </div>
+    </div>
+
+    <div class="card shadow-sm"><div class="card-header bg-white"><h2 class="h5 mb-0">Lead bearbeiten</h2></div><div class="card-body">
       <form method="post" class="row g-3">
         {% include "partials/opportunity_fields.html" %}
         <div class="col-12"><button class="btn btn-primary">Änderungen speichern und neu bewerten</button></div>
@@ -22,11 +41,12 @@
     </div></div>
   </div>
   <div class="col-lg-4">
-    <div class="card shadow-sm mb-4"><div class="card-header bg-white fw-bold">Kontakt vorbereiten</div><div class="card-body">
-      <p class="text-muted small">Dieser Text wird lokal aus dem Treffer erstellt und kann in eine E-Mail kopiert werden.</p>
-      <textarea class="form-control" rows="14">{{ contact_text }}</textarea>
+    <div class="card shadow-sm mb-4"><div class="card-header bg-white fw-bold">Akquise-Empfehlung</div><div class="card-body"><p>{{ recommendation }}</p></div></div>
+    <div class="card shadow-sm mb-4"><div class="card-header bg-white fw-bold">Erstmail-Vorschlag</div><div class="card-body">
+      <p class="text-muted small">Kurz, konkret, regional und nicht aufdringlich formuliert.</p>
+      <textarea class="form-control" rows="18">{{ contact_text }}</textarea>
     </div></div>
-    <div class="card border-danger"><div class="card-body"><form method="post" action="{{ url_for('opportunity_delete', opportunity_id=opportunity.id) }}" onsubmit="return confirm('Treffer wirklich löschen?')"><button class="btn btn-outline-danger w-100">Treffer löschen</button></form></div></div>
+    <div class="card border-danger"><div class="card-body"><form method="post" action="{{ url_for('lead_delete', lead_id=opportunity.id) }}" onsubmit="return confirm('Lead archivieren?')"><button class="btn btn-outline-danger w-100">Lead archivieren</button></form></div></div>
   </div>
 </div>
 {% endblock %}

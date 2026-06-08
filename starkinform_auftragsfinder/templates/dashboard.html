@@ -1,10 +1,28 @@
 {% extends "base.html" %}
 {% block content %}
+<div class="hero-panel mb-4">
+  <div>
+    <p class="eyebrow mb-1">Digitaler Akquise-Agent für Starkinform · Greiz</p>
+    <h1 class="display-6 mb-2">Marktbeobachtung für Graffiti-, Wand- und Fassadengestaltung</h1>
+    <p class="text-muted mb-0">Live-Suche, Frühwarnsignale, Score, Kontaktvorschlag und Wiedervorlage in einem Dashboard.</p>
+  </div>
+  <div class="d-flex gap-2 flex-wrap">
+    <form method="post" action="{{ url_for('search_run') }}"><button class="btn btn-danger btn-lg">Live-Suche starten</button></form>
+    <a class="btn btn-outline-dark btn-lg" href="{{ url_for('export_csv') }}">CSV exportieren</a>
+  </div>
+</div>
+
 <div class="row g-3 mb-4">
-  <div class="col-md-3"><div class="card stat-card"><div class="card-body"><small>Treffer gesamt</small><h2>{{ stats.total }}</h2></div></div></div>
-  <div class="col-md-3"><div class="card stat-card"><div class="card-body"><small>Neue Treffer</small><h2>{{ stats.new }}</h2></div></div></div>
-  <div class="col-md-3"><div class="card stat-card"><div class="card-body"><small>Grüne Chancen</small><h2>{{ stats.green }}</h2></div></div></div>
-  <div class="col-md-3"><div class="card stat-card"><div class="card-body"><small>Fokus</small><h2>Greiz + Region</h2></div></div></div>
+  <div class="col-md-3"><div class="card stat-card"><div class="card-body"><small>Neue Chancen heute</small><h2>{{ stats.new_today }}</h2></div></div></div>
+  <div class="col-md-3"><div class="card stat-card hot"><div class="card-body"><small>Heiße Chancen ≥ 70</small><h2>{{ stats.hot }}</h2></div></div></div>
+  <div class="col-md-3"><div class="card stat-card instant"><div class="card-body"><small>Sofort kontaktieren ≥ 85</small><h2>{{ stats.instant }}</h2></div></div></div>
+  <div class="col-md-3"><div class="card stat-card"><div class="card-body"><small>Leads gesamt</small><h2>{{ stats.total }}</h2></div></div></div>
+</div>
+
+<div class="row g-3 mb-4 quick-filters">
+  {% for label, section in [('Neue Chancen heute','today'),('Heiße Akquise-Chancen','hot'),('Stadtwerke / Energieversorger','Stadtwerke / Energieversorger'),('Kommunen / Städte / Gemeinden','Kommunen / Städte / Gemeinden'),('Schulen / Kitas / Jugendclubs','Schulen / Kitas / Jugendclubs'),('Firmen / Gewerbe','Firmen / Gewerbe'),('Ausschreibungen','Ausschreibungen'),('Beobachtungsliste','watchlist')] %}
+  <div class="col-sm-6 col-xl-3"><a class="btn btn-light w-100 text-start {% if filters.section == section %}active{% endif %}" href="{{ url_for('dashboard', section=section) }}">{{ label }}</a></div>
+  {% endfor %}
 </div>
 
 <div class="row g-4">
@@ -12,35 +30,33 @@
     <div class="card shadow-sm">
       <div class="card-header bg-white">
         <form class="row g-2 align-items-end" method="get">
-          <div class="col-md-2"><label class="form-label">Quelle</label><select class="form-select" name="source"><option value="">Alle</option>{% for value in filter_options.sources %}<option {% if filters.source == value %}selected{% endif %}>{{ value }}</option>{% endfor %}</select></div>
+          <div class="col-md-3"><label class="form-label">Suche</label><input class="form-control" name="q" value="{{ filters.q }}" placeholder="Ort, Quelle, Thema"></div>
+          <div class="col-md-2"><label class="form-label">Quelle</label><select class="form-select" name="source_name"><option value="">Alle</option>{% for value in filter_options.sources %}<option value="{{ value }}" {% if filters.source_name == value %}selected{% endif %}>{{ value }}</option>{% endfor %}</select></div>
           <div class="col-md-2"><label class="form-label">Status</label><select class="form-select" name="status"><option value="">Alle</option>{% for value in filter_options.statuses %}<option {% if filters.status == value %}selected{% endif %}>{{ value }}</option>{% endfor %}</select></div>
           <div class="col-md-2"><label class="form-label">Kategorie</label><select class="form-select" name="category"><option value="">Alle</option>{% for value in filter_options.categories %}<option {% if filters.category == value %}selected{% endif %}>{{ value }}</option>{% endfor %}</select></div>
-          <div class="col-md-2"><label class="form-label">Ampel</label><select class="form-select" name="traffic_light"><option value="">Alle</option>{% for value in filter_options.traffic_lights %}<option {% if filters.traffic_light == value %}selected{% endif %}>{{ value }}</option>{% endfor %}</select></div>
-          <div class="col-md-1"><label class="form-label">km max</label><input class="form-control" name="max_distance" value="{{ filters.max_distance }}" type="number"></div>
-          <div class="col-md-2"><label class="form-label">Sortierung</label><select class="form-select" name="sort"><option value="score" {% if sort == 'score' %}selected{% endif %}>Score</option><option value="date" {% if sort == 'date' %}selected{% endif %}>Datum</option><option value="deadline" {% if sort == 'deadline' %}selected{% endif %}>Deadline</option></select></div>
+          <div class="col-md-1"><label class="form-label">km</label><input class="form-control" name="max_distance" value="{{ filters.max_distance }}" type="number"></div>
+          <div class="col-md-1"><label class="form-label">Sort</label><select class="form-select" name="sort"><option value="score" {% if sort == 'score' %}selected{% endif %}>Score</option><option value="date" {% if sort == 'date' %}selected{% endif %}>Datum</option><option value="distance" {% if sort == 'distance' %}selected{% endif %}>Nähe</option></select></div>
           <div class="col-md-1"><button class="btn btn-primary w-100">Filtern</button></div>
         </form>
       </div>
       <div class="table-responsive">
         <table class="table table-hover align-middle mb-0">
-          <thead class="table-light"><tr><th>Ampel</th><th>Score</th><th>Quelle</th><th>Ort</th><th>km</th><th>Titel</th><th>Auftraggeber</th><th>Link</th><th>Kommentar</th><th>Aktion</th><th>Status</th></tr></thead>
+          <thead class="table-light"><tr><th>Signal</th><th>Score</th><th>Titel</th><th>Ort</th><th>km</th><th>Kategorie</th><th>Warum interessant?</th><th>Nächster Schritt</th><th>Status</th></tr></thead>
           <tbody>
-          {% for item in opportunities %}
+          {% for item in leads %}
             <tr>
               <td><span class="traffic traffic-{{ item.traffic_light|lower }}">{{ item.traffic_light }}</span></td>
-              <td><strong>{{ item.score }}</strong></td>
-              <td>{{ item.source }}</td>
-              <td>{{ item.location }}</td>
-              <td>{{ item.distance_km or '—' }}</td>
-              <td><a href="{{ url_for('opportunity_detail', opportunity_id=item.id) }}" class="fw-semibold">{{ item.title }}</a></td>
-              <td>{{ item.client or '—' }}</td>
-              <td>{% if item.link %}<a href="{{ item.link }}" target="_blank" rel="noopener">öffnen</a>{% else %}—{% endif %}</td>
-              <td class="small text-muted">{{ item.notes or item.description[:80] }}</td>
+              <td><strong>{{ item.total_score }}</strong></td>
+              <td><a href="{{ url_for('lead_detail', lead_id=item.id) }}" class="fw-semibold">{{ item.title }}</a><br><small class="text-muted">{{ item.source_name }} · {% if item.result_url %}<a href="{{ item.result_url }}" target="_blank" rel="noopener">Quelle</a>{% endif %}</small></td>
+              <td>{{ item.location_name or '—' }}<br><small class="text-muted">{{ item.state or '—' }}</small></td>
+              <td>{{ item.distance_from_greiz_km or '—' }}</td>
+              <td>{{ item.category }}</td>
+              <td class="small text-muted">{{ item.opportunity_reason or item.description[:120] }}</td>
               <td class="small">{{ item.next_action }}</td>
               <td><span class="badge text-bg-secondary">{{ item.status }}</span></td>
             </tr>
           {% else %}
-            <tr><td colspan="11" class="text-center py-5 text-muted">Noch keine Treffer. Lege manuell einen Treffer an, importiere CSV oder lade Demo-Daten.</td></tr>
+            <tr><td colspan="9" class="text-center py-5 text-muted">Noch keine Leads. Starte die Live-Suche, lade Demo-Daten oder importiere CSV.</td></tr>
           {% endfor %}
           </tbody>
         </table>
@@ -48,9 +64,16 @@
     </div>
   </div>
   <div class="col-xl-3">
-    <div class="card shadow-sm"><div class="card-header bg-white fw-bold">Beste Chancen</div><div class="list-group list-group-flush">
-      {% for item in stats.top %}<a class="list-group-item list-group-item-action" href="{{ url_for('opportunity_detail', opportunity_id=item.id) }}"><div class="d-flex justify-content-between"><strong>{{ item.title }}</strong><span>{{ item.score }}</span></div><small>{{ item.source }} · {{ item.location }}</small></a>{% else %}<div class="list-group-item text-muted">Keine Chancen vorhanden.</div>{% endfor %}
+    <div class="card shadow-sm mb-4"><div class="card-header bg-white fw-bold">Top 5 Chancen</div><div class="list-group list-group-flush">
+      {% for item in stats.top %}<a class="list-group-item list-group-item-action" href="{{ url_for('lead_detail', lead_id=item.id) }}"><div class="d-flex justify-content-between gap-2"><strong>{{ item.title }}</strong><span class="score-pill">{{ item.total_score }}</span></div><small>{{ item.category }} · {{ item.location_name or 'Ort offen' }}</small></a>{% else %}<div class="list-group-item text-muted">Keine Chancen vorhanden.</div>{% endfor %}
     </div></div>
+    <div class="card shadow-sm mb-4"><div class="card-header bg-white fw-bold">Suchlauf-Protokoll</div><div class="list-group list-group-flush small">
+      {% for run in runs %}<div class="list-group-item"><strong>{{ run.started_at }}</strong><br>{{ run.new_leads }} neu · {{ run.updated_leads }} aktualisiert · {{ run.results_found }} Treffer{% if run.errors %}<br><span class="text-danger">Fehler vorhanden</span>{% endif %}</div>{% else %}<div class="list-group-item text-muted">Noch kein Suchlauf.</div>{% endfor %}
+    </div></div>
+    <div class="card shadow-sm"><div class="card-header bg-white fw-bold">Kartenansicht (MVP)</div><div class="card-body"><div class="map-box">
+      {% for item in leads[:8] %}<div class="map-point traffic-{{ item.traffic_light|lower }}" title="{{ item.title }}">{{ loop.index }}</div>{% endfor %}
+      <span>Region Greiz · 0–300 km</span>
+    </div><p class="small text-muted mt-2 mb-0">Leads mit Koordinaten können später an Leaflet/OpenStreetMap angebunden werden; Farben entsprechen dem Score.</p></div></div>
   </div>
 </div>
 {% endblock %}

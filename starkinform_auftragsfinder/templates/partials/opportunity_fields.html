@@ -1,14 +1,22 @@
 {% set item = opportunity or {} %}
 <div class="col-md-8"><label class="form-label">Titel</label><input class="form-control" name="title" value="{{ item.title or '' }}" required></div>
-<div class="col-md-4"><label class="form-label">Quelle</label><input class="form-control" name="source" value="{{ item.source or 'Manuell' }}" required></div>
-<div class="col-md-8"><label class="form-label">Link</label><input class="form-control" name="link" value="{{ item.link or '' }}" type="url"></div>
-<div class="col-md-4"><label class="form-label">Auftraggeber</label><input class="form-control" name="client" value="{{ item.client or '' }}"></div>
-<div class="col-md-3"><label class="form-label">Ort</label><input class="form-control" name="location" value="{{ item.location or '' }}"></div>
+<div class="col-md-4"><label class="form-label">Quelle</label><input class="form-control" name="source_name" value="{{ item.source_name or 'Manuell' }}" required></div>
+<div class="col-md-8"><label class="form-label">Quell-/Ergebnislink</label><input class="form-control" name="result_url" value="{{ item.result_url or '' }}" type="url"></div>
+<div class="col-md-4"><label class="form-label">Organisation</label><input class="form-control" name="organization_name" value="{{ item.organization_name or '' }}"></div>
+<div class="col-md-3"><label class="form-label">Ort</label><input class="form-control" name="location_name" value="{{ item.location_name or '' }}"></div>
 <div class="col-md-3"><label class="form-label">Bundesland</label><input class="form-control" name="state" value="{{ item.state or 'Thüringen' }}"></div>
-<div class="col-md-3"><label class="form-label">Entfernung zu Greiz (km)</label><input class="form-control" name="distance_km" value="{{ item.distance_km or '' }}" type="number" step="0.1" placeholder="optional"></div>
-<div class="col-md-3"><label class="form-label">Deadline</label><input class="form-control" name="deadline" value="{{ item.deadline or '' }}" type="date"></div>
+<div class="col-md-3"><label class="form-label">Entfernung zu Greiz (km)</label><input class="form-control" name="distance_from_greiz_km" value="{{ item.distance_from_greiz_km or '' }}" type="number" step="0.1"></div>
+<div class="col-md-3"><label class="form-label">Veröffentlicht am</label><input class="form-control" name="published_at" value="{{ item.published_at or '' }}" type="date"></div>
 <div class="col-md-4"><label class="form-label">Kategorie</label><select class="form-select" name="category">{% for category in categories %}<option {% if item.category == category %}selected{% endif %}>{{ category }}</option>{% endfor %}</select></div>
-<div class="col-md-4"><label class="form-label">Projektpotenzial</label><select class="form-select" name="potential">{% for value in ['Niedrig','Mittel','Hoch','Sehr hoch'] %}<option {% if item.potential == value %}selected{% endif %}>{{ value }}</option>{% endfor %}</select></div>
+<div class="col-md-4"><label class="form-label">Budgetpotenzial</label><select class="form-select" name="estimated_budget">{% for value in ['niedrig','niedrig bis mittel','mittel','hoch','sehr hoch'] %}<option {% if item.estimated_budget == value %}selected{% endif %}>{{ value }}</option>{% endfor %}</select></div>
 <div class="col-md-4"><label class="form-label">Status</label><select class="form-select" name="status">{% for status in statuses %}<option {% if item.status == status %}selected{% endif %}>{{ status }}</option>{% endfor %}</select></div>
+<div class="col-md-6"><label class="form-label">Ansprechpartner</label><input class="form-control" name="contact_name" value="{{ item.contact_name or '' }}"></div>
+<div class="col-md-6"><label class="form-label">Rolle</label><input class="form-control" name="contact_role" value="{{ item.contact_role or '' }}"></div>
+<div class="col-md-6"><label class="form-label">E-Mail</label><input class="form-control" name="contact_email" value="{{ item.contact_email or '' }}" type="email"></div>
+<div class="col-md-6"><label class="form-label">Telefon</label><input class="form-control" name="contact_phone" value="{{ item.contact_phone or '' }}"></div>
+<div class="col-md-6"><label class="form-label">Webseite Auftraggeber</label><input class="form-control" name="organization_website" value="{{ item.organization_website or '' }}" type="url"></div>
+<div class="col-md-6"><label class="form-label">Wiedervorlage</label><input class="form-control" name="follow_up_date" value="{{ item.follow_up_date or '' }}" type="date"></div>
 <div class="col-12"><label class="form-label">Beschreibung</label><textarea class="form-control" name="description" rows="5">{{ item.description or '' }}</textarea></div>
+<div class="col-md-6"><label class="form-label">Warum interessant?</label><textarea class="form-control" name="opportunity_reason" rows="3">{{ item.opportunity_reason or '' }}</textarea></div>
+<div class="col-md-6"><label class="form-label">Passende Starkinform-Leistung</label><textarea class="form-control" name="recommended_service" rows="3">{{ item.recommended_service or '' }}</textarea></div>
 <div class="col-12"><label class="form-label">Notizen</label><textarea class="form-control" name="notes" rows="3">{{ item.notes or '' }}</textarea></div>
