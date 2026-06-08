@@ -1,115 +1,122 @@
-"""Bewertungslogik für potenzielle Aufträge.
-
-Die Logik ist bewusst transparent und leicht anpassbar gehalten. Später können
-hier Branchen-spezifische Gewichtungen oder KI-gestützte Bewertungen ergänzt
-werden, ohne die Weboberfläche umbauen zu müssen.
-"""
+"""Transparente Akquise-Score-Logik für Starkinform-Leads."""
 from __future__ import annotations
 
 from datetime import date, datetime
 from typing import Optional
 
 RELEVANCE_TERMS = {
-    "graffiti", "wandgestaltung", "fassade", "fassadengestaltung",
-    "fassadenkunst", "street art", "mural", "wandmalerei", "workshop",
-    "schulhof", "kita", "schule", "trafostation", "trafohaus",
-    "energiehaus", "stadtwerke", "kunst am bau", "jugendprojekt",
+    "graffiti", "wandgestaltung", "fassade", "fassadengestaltung", "street art", "mural",
+    "wandmalerei", "trafostation", "trafo", "energiehaus", "verteilerkasten", "stromkasten",
+    "schule", "kita", "schulhof", "workshop", "kunst am bau", "innenraum", "stadtwerke",
 }
-PRESTIGE_TERMS = {"kommune", "stadt", "stadtwerke", "schule", "kita", "öffentlich", "kunst am bau", "wohnungsbau"}
-BUDGET_TERMS = {"fassade", "fassadengestaltung", "kunst am bau", "stadtwerke", "wohnungsbau", "innenraumgestaltung"}
+HIGH_SIGNAL_TERMS = {
+    "ausschreibung", "vergabe", "interessenbekundung", "angebot einholen", "künstler gesucht",
+    "gestaltung geplant", "sanierung geplant", "aufwertung", "verschönerung", "vandalismus",
+    "schmierereien", "graffiti entfernen", "prävention", "stadtbild", "fördermittel",
+    "quartiersmanagement", "bürgerprojekt", "kunst am bau",
+}
+BUDGET_TERMS = {"fassade", "fassadensanierung", "stadtwerke", "trafostation", "kunst am bau", "neubau", "sanierung", "quartier", "showroom", "hotel"}
+PRESTIGE_TERMS = {"stadt", "gemeinde", "kommune", "stadtwerke", "schule", "kita", "öffentlich", "bahnhof", "unterführung", "wohnungsbau"}
+CONTACT_TERMS = {"kontakt", "ansprechpartner", "presse", "rathaus", "stadtwerke", "impressum", "ausschreibung"}
 
-CATEGORY_WEIGHTS = {
-    "Trafostation / Energiehaus": 18,
-    "Schul- und Kita-Projekt": 16,
-    "Fassadengestaltung": 17,
-    "Graffiti-Workshop": 13,
-    "Kommunales Kunstprojekt": 18,
-    "Wohnungsbaugesellschaft": 15,
-    "Firmen-Innenraumgestaltung": 14,
-    "Kunst am Bau": 18,
+CATEGORY_HINTS = {
+    "Stadtwerke / Energieversorger": {"stadtwerke", "trafostation", "trafo", "energiehaus", "netzstation", "ladesäule"},
+    "Kommunen / Städte / Gemeinden": {"stadt", "gemeinde", "kommune", "stadtbild", "unterführung", "bahnhof", "amtsblatt"},
+    "Schulen / Kitas / Jugendclubs": {"schule", "kita", "jugendclub", "schulhof", "workshop", "jugendprojekt"},
+    "Firmen / Gewerbe": {"firma", "unternehmen", "büro", "showroom", "hotel", "gastronomie", "autohaus", "fitnessstudio"},
+    "Ausschreibungen": {"ausschreibung", "vergabe", "leistungsverzeichnis", "angebot"},
+    "Fassadengestaltung": {"fassade", "fassadengestaltung", "mural"},
+    "Graffiti-Prävention": {"schmierereien", "vandalismus", "graffiti entfernen", "prävention"},
 }
 
 
-def _normalize(text: Optional[str]) -> str:
-    return (text or "").lower()
+def _text(lead: dict) -> str:
+    fields = ["title", "description", "category", "organization_name", "location_name", "source_name"]
+    return " ".join(str(lead.get(field) or "").lower() for field in fields)
 
 
-def deadline_urgency(deadline: Optional[str]) -> int:
-    """Bewertet Fristen: baldige, aber noch machbare Deadlines sind wertvoll."""
-    if not deadline:
-        return 6
-    try:
-        due = datetime.strptime(deadline, "%Y-%m-%d").date()
-    except ValueError:
-        return 5
-    days_left = (due - date.today()).days
-    if days_left < 0:
-        return 1
-    if days_left <= 7:
-        return 10
-    if days_left <= 30:
-        return 13
-    if days_left <= 90:
-        return 9
-    return 6
+def count_terms(text: str, terms: set[str]) -> int:
+    return sum(1 for term in terms if term in text)
 
 
-def distance_points(distance_km: Optional[float]) -> int:
+def distance_score(distance_km: Optional[float]) -> int:
     if distance_km is None:
         return 7
-    if distance_km <= 30:
-        return 20
-    if distance_km <= 75:
-        return 17
+    if distance_km <= 50:
+        return 15
+    if distance_km <= 100:
+        return 12
     if distance_km <= 150:
-        return 13
-    if distance_km <= 250:
-        return 8
-    return 4
+        return 9
+    if distance_km <= 300:
+        return 5
+    return 1
 
 
-def term_score(text: str, terms: set[str], max_points: int) -> int:
-    hits = sum(1 for term in terms if term in text)
-    if hits == 0:
-        return 3
-    return min(max_points, 4 + hits * 4)
+def urgency_score(lead: dict) -> int:
+    text = _text(lead)
+    points = 4 + min(4, count_terms(text, HIGH_SIGNAL_TERMS))
+    published_at = lead.get("published_at") or lead.get("discovered_at")
+    if published_at:
+        try:
+            age = (date.today() - datetime.fromisoformat(published_at[:10]).date()).days
+            if age <= 2:
+                points += 2
+            elif age <= 14:
+                points += 1
+        except ValueError:
+            pass
+    return min(10, points)
 
 
-def calculate_score(opportunity: dict) -> int:
-    """Berechnet einen Score von 1 bis 100 anhand nachvollziehbarer Faktoren."""
-    combined = " ".join([
-        _normalize(opportunity.get("title")),
-        _normalize(opportunity.get("description")),
-        _normalize(opportunity.get("category")),
-        _normalize(opportunity.get("client")),
-    ])
-    category = opportunity.get("category") or ""
+def categorize(lead: dict) -> str:
+    text = _text(lead)
+    for category, hints in CATEGORY_HINTS.items():
+        if any(hint in text for hint in hints):
+            return category
+    return lead.get("category") or "Sonstiges"
 
-    score = 0
-    score += distance_points(opportunity.get("distance_km"))                 # max 20
-    score += min(20, CATEGORY_WEIGHTS.get(category, 8) + term_score(combined, RELEVANCE_TERMS, 10) // 3)
-    score += term_score(combined, BUDGET_TERMS, 15)                           # max 15
-    score += 10 if any(x in combined for x in ["sucht", "plant", "ausschreibung", "angebot"]) else 6
-    score += term_score(combined, PRESTIGE_TERMS, 13)                         # max 13
-    score += 12 if any(x in combined for x in ["stark", "mural", "graffiti", "fassade", "workshop"]) else 7
-    score += deadline_urgency(opportunity.get("deadline"))                    # max 13
 
-    return max(1, min(100, int(score)))
+def score_breakdown(lead: dict) -> dict[str, int]:
+    text = _text(lead)
+    relevance = min(25, 6 + count_terms(text, RELEVANCE_TERMS) * 4 + count_terms(text, HIGH_SIGNAL_TERMS) * 2)
+    probability = min(20, 5 + count_terms(text, HIGH_SIGNAL_TERMS) * 4 + (4 if "gesucht" in text or "plant" in text else 0))
+    budget = min(15, 4 + count_terms(text, BUDGET_TERMS) * 3)
+    prestige = min(10, 2 + count_terms(text, PRESTIGE_TERMS) * 2)
+    contactability = min(5, (3 if lead.get("organization_website") or lead.get("source_url") else 1) + count_terms(text, CONTACT_TERMS))
+    return {
+        "relevance_score": relevance,
+        "distance_score": distance_score(lead.get("distance_from_greiz_km")),
+        "probability_score": probability,
+        "budget_score": budget,
+        "urgency_score": urgency_score(lead),
+        "prestige_score": prestige,
+        "contactability_score": contactability,
+    }
+
+
+def calculate_total_score(lead: dict) -> int:
+    parts = score_breakdown(lead)
+    return max(0, min(100, sum(parts.values())))
 
 
 def traffic_light(score: int) -> str:
-    if score >= 75:
-        return "Grün"
-    if score >= 45:
+    if score >= 85:
+        return "Rot"
+    if score >= 70:
+        return "Orange"
+    if score >= 50:
         return "Gelb"
-    return "Rot"
+    return "Grau"
 
 
-def recommended_action(score: int, deadline: Optional[str] = None) -> str:
-    if score >= 75:
-        return "Sofort prüfen und Erstkontakt vorbereiten"
-    if score >= 45:
-        return "Beobachten, Details recherchieren und bei Gelegenheit nachfassen"
-    if deadline:
-        return "Nur prüfen, wenn freie Kapazität vorhanden ist"
-    return "Niedrige Priorität, archivieren oder später neu bewerten"
+def recommended_action(score: int) -> str:
+    if score >= 85:
+        return "Sofort anrufen oder kurze Erstmail senden"
+    if score >= 70:
+        return "Kurzfristig recherchieren und kontaktieren"
+    if score >= 50:
+        return "Beobachten oder weich mit Referenzen ansprechen"
+    if score >= 30:
+        return "Niedrige Priorität, nur bei Kapazität prüfen"
+    return "Archivieren"

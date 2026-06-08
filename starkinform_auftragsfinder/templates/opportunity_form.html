@@ -1,11 +1,9 @@
 {% extends "base.html" %}
 {% block content %}
-<div class="row justify-content-center"><div class="col-lg-9">
-  <div class="card shadow-sm"><div class="card-header bg-white"><h1 class="h4 mb-0">Neuen Treffer anlegen</h1></div><div class="card-body">
-    <form method="post" class="row g-3">
-      {% include "partials/opportunity_fields.html" %}
-      <div class="col-12"><button class="btn btn-primary">Speichern und bewerten</button> <a class="btn btn-outline-secondary" href="{{ url_for('dashboard') }}">Abbrechen</a></div>
-    </form>
-  </div></div>
+<div class="card shadow-sm"><div class="card-header bg-white"><h1 class="h4 mb-0">Neuen Lead anlegen</h1></div><div class="card-body">
+  <form method="post" class="row g-3">
+    {% include "partials/opportunity_fields.html" %}
+    <div class="col-12"><button class="btn btn-primary">Lead speichern und bewerten</button></div>
+  </form>
 </div></div>
 {% endblock %}

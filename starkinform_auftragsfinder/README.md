@@ -1,176 +1,74 @@
-# Starkinform Auftragsfinder
+# Starkinform Akquise- und Marktbeobachtungs-App
 
-Lokale Web-App für Starkinform aus Greiz, Thüringen. Die Anwendung hilft dabei, potenzielle Aufträge für Graffiti-Auftragsarbeiten, Fassadengestaltung, Wandgestaltung, Trafostationen, Schul- und Kita-Projekte, Workshops, kommunale Kunstprojekte, Stadtwerke, Wohnungsbaugesellschaften und Firmen-Innenraumgestaltung zu sammeln, zu bewerten und nachzuverfolgen.
+Professionelle lokale MVP-Web-App für **Starkinform** aus Greiz, Thüringen. Die App arbeitet als digitaler Akquise-Agent für Graffiti-Kunst, Fassadengestaltung, Wandgestaltung, Trafostationen, Energiehäuser, Schul-/Kita-Projekte, kommunale Verschönerung, Firmenflächen und Innenräume.
 
-## Warum dieses MVP rechtssicher startet
+## MVP-Funktionen
 
-Der Auftragsfinder enthält bewusst **keine aggressiven Scraper** und keine Umgehung technischer Sperren. Quellen wie Kleinanzeigen, MyHammer oder Ausschreibungsportale werden zunächst als gespeicherte Suchlinks und manuelle Prüfpunkte verwaltet. Unterstützt werden im MVP:
+- modernes Dashboard mit neuen Chancen, heißen Leads, Sofort-Kontakt-Hinweisen und Top-5-Liste
+- manuelle Live-Suche über öffentliche Google-News-RSS-Feeds und optionale Bing-Web-Search-API
+- täglicher Suchlauf per Cron/Task Scheduler über `python app.py run-search`
+- umfangreiche Suchcluster für direkte Aufträge, Frühwarnsignale, Stadtwerke/Energie, kommunale Bauprojekte und Firmeninnenräume
+- SQLite-Datenmodell mit den Tabellen `leads`, `sources`, `search_terms`, `search_runs`, `contacts`, `notes`, `notifications`, `settings` und `outreach_templates`
+- Lead-Detailseite mit KI-ähnlicher regelbasierter Zusammenfassung, Akquise-Empfehlung, Score-Aufschlüsselung und Erstmail-Vorschlag
+- Score von 0 bis 100 nach Relevanz, Nähe zu Greiz, Abschlusswahrscheinlichkeit, Budget, Dringlichkeit, Prestige und Kontaktierbarkeit
+- Duplikaterkennung per Hash aus Titel, Quelle und Link
+- Statusverwaltung: `neu`, `geprüft`, `kontaktiert`, `Angebot gesendet`, `gewonnen`, `verloren`, `archiviert`
+- Beobachtungsliste über Statusfilter
+- Karten-MVP mit farbiger Prioritätsdarstellung; spätere Leaflet/OpenStreetMap-Anbindung vorbereitet
+- CSV-Import und CSV-Export der wichtigsten Lead-Felder
+- Benachrichtigungsbereich mit Tageszusammenfassung und vorbereiteten Kanälen für App/SMTP/WhatsApp/Telegram
 
-- manuell eingetragene Treffer
-- gespeicherte Such-URLs
-- vorbereitete Google-Suchlinks
-- CSV-Import aus eigener Recherche
-- eine Adapter-Struktur für spätere erlaubte RSS-Feeds, offizielle APIs oder freigegebene Quellen
+## Rechtssichere Quellenstrategie
 
-## Funktionen
-
-- Dashboard mit Kennzahlen, Top-Chancen, Ampelstatus und filterbarer Tabelle
-- Trefferverwaltung mit Detailseite, Notizen, Statusänderung und Quellenlink
-- automatische Bewertung von 1 bis 100
-- Ampellogik: Grün ab 75, Gelb ab 45, Rot bis 44
-- professionelle Kontakttext-Vorbereitung für Starkinform
-- Keyword-Verwaltung mit aktivierbaren/deaktivierbaren Startbegriffen
-- Quellenverwaltung für Suchlinks, RSS-Hinweise und manuell zu prüfende Plattformen
-- CSV-Import mit den Spalten `Titel, Quelle, Link, Auftraggeber, Ort, Beschreibung, Kategorie, Deadline`
-- Demo-Daten für realistische Beispielaufträge
-- vorbereitete, aber deaktivierte E-Mail-Benachrichtigung für grüne Treffer
-
-## Projektstruktur
-
-```text
-starkinform_auftragsfinder/
-├── app.py
-├── config.py
-├── requirements.txt
-├── README.md
-├── database/
-├── services/
-│   ├── contact.py
-│   ├── db.py
-│   ├── emailer.py
-│   ├── scoring.py
-│   └── sources.py
-├── templates/
-├── static/
-├── imports/
-└── demo_data/
-```
-
-## Python installieren
-
-### Windows
-
-1. Öffne <https://www.python.org/downloads/>.
-2. Lade Python 3.11 oder neuer herunter.
-3. Beim Installer unbedingt **Add python.exe to PATH** aktivieren.
-4. Installation abschließen.
-5. In PowerShell prüfen:
-
-```powershell
-python --version
-```
-
-### macOS
-
-Mit Homebrew:
-
-```bash
-brew install python
-python3 --version
-```
-
-### Linux
-
-Debian/Ubuntu:
-
-```bash
-sudo apt update
-sudo apt install python3 python3-venv python3-pip
-python3 --version
-```
+Die App verwendet im MVP nur öffentlich zugängliche Suchlinks/RSS-Feeds und optionale offizielle APIs. Sie enthält keine aggressiven Scraper, keine Login-Umgehung, keine Captcha-Umgehung und keine Umgehung technischer Sperren. Plattformen wie Kleinanzeigen, MyHammer oder Social Media werden als manuelle Quellen oder spätere legale Schnittstellen geführt.
 
 ## Installation
-
-Im Projektordner ausführen:
 
 ```bash
 cd starkinform_auftragsfinder
 python3 -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
-```
-
-Unter Windows PowerShell:
-
-```powershell
-cd starkinform_auftragsfinder
-python -m venv .venv
-.\.venv\Scripts\Activate.ps1
-pip install -r requirements.txt
-```
-
-## App starten
-
-```bash
 python app.py
 ```
 
-Danach im Browser öffnen:
+Danach öffnen:
 
 ```text
 http://127.0.0.1:5000
 ```
 
-Beim ersten Start legt die App automatisch die SQLite-Datenbank unter `database/auftragsfinder.sqlite3` an und befüllt Keywords sowie vorbereitete Quellen.
+## Live-Suche starten
 
-## Demo-Daten laden
-
-In der Web-App oben rechts auf **Demo-Daten laden** klicken. Alternativ kann die Datei `demo_data/demo_opportunities.csv` über die CSV-Importseite hochgeladen werden.
-
-Die Demo-Daten enthalten unter anderem:
-
-- Stadtwerke suchen Gestaltung für Trafostation
-- Schule plant Schulhofgestaltung
-- Kommune sucht Künstler für Jugendprojekt
-- Wohnungsbaugesellschaft möchte Fassade aufwerten
-- Firma sucht Innenraumgestaltung
-
-## CSV-Import
-
-Die Importdatei muss UTF-8-codiert sein und diese Kopfzeile verwenden:
-
-```csv
-Titel,Quelle,Link,Auftraggeber,Ort,Beschreibung,Kategorie,Deadline
-```
-
-`Deadline` wird als Datum im Format `YYYY-MM-DD` erwartet, z. B. `2026-07-15`.
-
-## Bewertungslogik
-
-Die Scoring-Logik liegt in `services/scoring.py` und bewertet transparent:
-
-1. Entfernung zu Greiz
-2. Relevanz für Starkinform
-3. geschätztes Budgetpotenzial
-4. Wahrscheinlichkeit eines Auftrags
-5. Prestige- oder Referenzwert
-6. Passung zu bisherigen Starkinform-Projekten
-7. Dringlichkeit / Deadline
-
-Ampelstatus:
-
-- **Grün:** Score 75–100, sofort prüfen oder kontaktieren
-- **Gelb:** Score 45–74, beobachten oder später prüfen
-- **Rot:** Score 1–44, geringe Priorität
-
-## E-Mail-Benachrichtigung
-
-Unter **Benachrichtigung** können SMTP-Felder vorbereitet werden. Im MVP wird nichts automatisch versendet. Die Demo-Vorschau zeigt nur, welche grünen Treffer später in eine automatische E-Mail aufgenommen würden.
-
-## Später echte Quellen ergänzen
-
-Für neue Quellen sollte ein eigener Adapter in `services/` ergänzt werden, z. B. `rss_adapter.py` oder `official_api_adapter.py`. Wichtig:
-
-1. Nutzungsbedingungen der Quelle prüfen.
-2. Nur öffentliche RSS-Feeds, offizielle APIs oder ausdrücklich erlaubte Abrufe verwenden.
-3. Keine Captcha-Umgehung, Login-Umgehung oder technische Blockade umgehen.
-4. Treffer über `create_opportunity()` speichern, damit Bewertung und Ampel automatisch berechnet werden.
-5. Quellen, deren Scraping verboten ist, weiterhin als Suchlink unter **Quellen** pflegen und manuell prüfen.
-
-## Startbefehl kurz
+In der App auf **Live-Suche starten** klicken oder im Terminal:
 
 ```bash
 cd starkinform_auftragsfinder
-source .venv/bin/activate
-python app.py
+python app.py run-search
 ```
+
+Für eine tägliche Suche kann dieser Befehl per Cron ausgeführt werden, z. B. täglich um 07:30 Uhr:
+
+```cron
+30 7 * * * cd /pfad/zum/projekt/starkinform_auftragsfinder && /pfad/zur/.venv/bin/python app.py run-search
+```
+
+## Optionale Bing-API
+
+Ohne API-Key nutzt die App Google-News-RSS. Für zusätzliche Web-Suchergebnisse kann in **Benachrichtigung & tägliche Suche** ein Bing-Search-API-Key hinterlegt oder `BING_API_KEY` als Umgebungsvariable gesetzt werden.
+
+## CSV-Import
+
+Unterstützt werden unter anderem diese Spalten:
+
+```csv
+Titel,Quelle,Link,Auftraggeber,Ort,Beschreibung,Kategorie,Datum
+```
+
+## Weiterer Ausbau nach dem MVP
+
+- echte Leaflet/OpenStreetMap-Karte mit Marker-Clustering
+- zusätzliche offizielle RSS-/API-Adapter für Städte, Stadtwerke, Vergabeportale und Amtsblätter
+- echte SMTP-/Telegram-/WhatsApp-Benachrichtigung nach hinterlegter Konfiguration
+- PDF-/Excel-Export und Wochenbericht
+- optionale LLM-Auswertung über eine serverseitig hinterlegte API
